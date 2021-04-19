@@ -21,7 +21,8 @@ This repository hosts the backend infrastructure of the Energify project.
 ### 🔗 Dependencies
 
 - <a href="https://nestjs.com/" target="_blank">NestJS</a>
-- <a href="https://www.npmjs.com/package/mysql2" target="_blank">MySQL2</a>
+- <a href="https://www.npmjs.com/package/typeorm" target="_blank">TypeORM</a>
+- <a href="https://www.npmjs.com/package/redis" target="_blank">Redis</a>
 - <a href="https://www.npmjs.com/package/@hashgraph/sdk" target="_blank">Hashgraph SDK</a>
 
 

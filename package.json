@@ -1,9 +1,9 @@
 {
-  "name": "nest-typescript-starter",
-  "private": true,
-  "version": "1.0.0",
-  "description": "Nest TypeScript starter repository",
-  "license": "MIT",
+  "name": "Energify",
+  "private": false,
+  "version": "0.0.1",
+  "description": "Energify is a p2p energify trading platform.",
+  "license": "GPL3",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
@@ -20,12 +20,19 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@hashgraph/sdk": "^2.0.17-beta.4",
     "@nestjs/common": "^7.6.15",
+    "@nestjs/config": "^0.6.3",
     "@nestjs/core": "^7.6.15",
     "@nestjs/platform-express": "^7.6.15",
+    "@nestjs/schedule": "^0.4.3",
+    "@nestjs/typeorm": "^7.1.5",
+    "mysql2": "^2.2.5",
+    "redis": "^3.1.1",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "rxjs": "^6.6.6"
+    "rxjs": "^6.6.6",
+    "typeorm": "^0.2.32"
   },
   "devDependencies": {
     "@nestjs/cli": "^7.6.0",
