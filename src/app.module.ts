@@ -1,9 +1,13 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { APP_GUARD } from "@nestjs/core";
 import { ScheduleModule } from "@nestjs/schedule";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { RedisModule } from "nestjs-redis";
 import { MetersModule } from "./meters/meters.module";
+import { AuthGuard } from "./shared/guards/auth.guard";
+
+import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [
@@ -35,6 +39,8 @@ import { MetersModule } from "./meters/meters.module";
     ScheduleModule.forRoot(),
     ConfigModule.forRoot(),
     MetersModule,
+    UsersModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })
 export class AppModule {}
