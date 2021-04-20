@@ -1,23 +1,56 @@
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { RedisService } from "nestjs-redis";
+import { Roles } from "src/shared/enums/roles.enum";
+import { IAuthedUser } from "src/users/interfaces/iauthed-user.entity";
+import { UpdateMeter } from "./dto/update-meter.dto";
 import { Meter } from "./entities/meter.entity";
 
 @Injectable()
 export class MetersService {
-  constructor(
-    @InjectRepository(Meter) private metersRepository: Repository<Meter>
-  ) {}
+  constructor(private redisService: RedisService) {}
 
-  async create() {
-    return this.metersRepository.save({});
+  async findByUser(user: IAuthedUser) {
+    if (user.role === Roles.Unverified) {
+      throw new BadRequestException("You must verify your account first.");
+    }
+
+    const meterTxt = await this.redisService.getClient().get(`meter.${user.id}`);
+    const meter = JSON.parse(meterTxt) as Meter;
+
+    if (!meter) {
+      throw new NotFoundException("Meter not found.");
+    }
+
+    return meter;
   }
 
-  async delete(id: number) {
-    return this.metersRepository.delete(id);
+  async updateByUser(user: IAuthedUser, dto: UpdateMeter) {
+    if (user.role === Roles.Unverified) {
+      throw new BadRequestException("You must verify your account first.");
+    }
+
+    const meterTxt = JSON.stringify({
+      userId: user.id,
+      measurement: dto.measurement,
+      updatedAt: new Date(),
+    });
+
+    await this.redisService.getClient().set(`meter.${user.id}`, meterTxt);
+
+    return { message: "Meter updated" };
   }
 
-  async findById(id: number) {
-    return this.metersRepository.findOneOrFail(id);
+  async deleteByUser(user: IAuthedUser) {
+    if (user.role === Roles.Unverified) {
+      throw new BadRequestException("You must verify your account first.");
+    }
+
+    const count = await this.redisService.getClient().del(`meter.${user.id}`);
+
+    if (count === 0) {
+      throw new NotFoundException("Meter not found.");
+    }
+
+    return { message: "Meter deleted" };
   }
 }
