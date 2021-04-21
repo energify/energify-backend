@@ -1,3 +1,4 @@
+import { Payment } from "src/payments/entities/payment.entity";
 import { Auditable } from "src/shared/entities/auditable.entity";
 import { User } from "src/users/entities/user.entity";
 import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, Index } from "typeorm";
@@ -21,9 +22,16 @@ export class Transaction extends Auditable {
   @Index()
   prosumerId: number;
 
-  @ManyToOne(() => User)
-  consumer: User;
+  @Column("int")
+  @Index()
+  paymentId: number;
 
   @ManyToOne(() => User)
-  prosumer: User;
+  consumer: Promise<User>;
+
+  @ManyToOne(() => User)
+  prosumer: Promise<User>;
+
+  @ManyToOne(() => Payment)
+  payment: Payment;
 }

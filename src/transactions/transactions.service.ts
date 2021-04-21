@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { subSeconds } from "date-fns";
 import { Roles } from "src/shared/enums/roles.enum";
+import { LessThanOrEqualDate } from "src/shared/util";
 import { UsersService } from "src/users/users.service";
-import { Repository } from "typeorm";
+import { Between, Repository } from "typeorm";
 import { CreateTransactionDto } from "./dto/create-transaction.dto";
 import { Transaction } from "./entities/transaction.entity";
 
@@ -37,6 +39,18 @@ export class TransactionsService {
   async findByUserId(userId: number) {
     return this.transactionsRepository.find({
       where: [{ prosumerId: userId }, { consumerId: userId }],
+    });
+  }
+
+  async findLastNSeconds(lastNSeconds: number) {
+    return this.transactionsRepository.find({
+      where: { createdAt: Between(subSeconds(new Date(), lastNSeconds), new Date()) },
+    });
+  }
+
+  async findLastByConsumerId(consumerId: number, lastNSeconds: number) {
+    return this.transactionsRepository.find({
+      where: { createdAt: Between(subSeconds(new Date(), lastNSeconds), new Date()), consumerId },
     });
   }
 }

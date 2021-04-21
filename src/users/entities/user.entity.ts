@@ -41,6 +41,9 @@ export class User extends Auditable {
   @Column("int", { default: Roles.Unverified })
   role: Roles;
 
+  @Column("varchar", { nullable: true })
+  hashgraphAccountId: string;
+
   @Column("float", { nullable: true })
   buyPrice: number;
 
