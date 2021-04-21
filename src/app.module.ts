@@ -8,6 +8,7 @@ import { MetersModule } from "./meters/meters.module";
 import { TransactionsModule } from "./transactions/transactions.module";
 import { AuthGuard } from "./shared/guards/auth.guard";
 import { UsersModule } from "./users/users.module";
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { UsersModule } from "./users/users.module";
     MetersModule,
     TransactionsModule,
     UsersModule,
+    PaymentsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })

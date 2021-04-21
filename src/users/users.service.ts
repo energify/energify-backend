@@ -55,6 +55,22 @@ export class UsersService {
   async logout() {}
 
   async findById(id: number) {
-    return this.usersRepository.findOne(id);
+    return this.usersRepository.findOneOrFail(id);
+  }
+
+  async findConsumerById(id: number) {
+    return this.usersRepository.findOneOrFail({ id, role: Roles.Consumer });
+  }
+
+  async findProsumerById(id: number) {
+    return this.usersRepository.findOneOrFail({ id, role: Roles.Prosumer });
+  }
+
+  async findConsumerByIds(id: number[]) {
+    return this.usersRepository.findByIds(id, { where: { role: Roles.Consumer } });
+  }
+
+  async findProsumerByIds(id: number[]) {
+    return this.usersRepository.findByIds(id, { where: { role: Roles.Prosumer } });
   }
 }
