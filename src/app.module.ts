@@ -1,10 +1,13 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { APP_GUARD } from "@nestjs/core";
 import { ScheduleModule } from "@nestjs/schedule";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { RedisModule } from "nestjs-redis";
 import { MetersModule } from "./meters/meters.module";
 import { TransactionsModule } from "./transactions/transactions.module";
+import { AuthGuard } from "./shared/guards/auth.guard";
+import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [
@@ -23,7 +26,7 @@ import { TransactionsModule } from "./transactions/transactions.module";
         autoLoadEntities: true,
       }),
     }),
-    /*  RedisModule.forRootAsync({
+    RedisModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
@@ -32,11 +35,13 @@ import { TransactionsModule } from "./transactions/transactions.module";
         password: configService.get<string>("REDIS_PASSWORD"),
         database: configService.get<string>("REDIS_NAME"),
       }),
-    }),*/
+    }),
     ScheduleModule.forRoot(),
     ConfigModule.forRoot(),
     MetersModule,
     TransactionsModule,
+    UsersModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })
 export class AppModule {}
