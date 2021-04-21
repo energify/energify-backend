@@ -40,4 +40,10 @@ export class User extends Auditable {
 
   @Column("int", { default: Roles.Unverified })
   role: Roles;
+
+  @Column("float", { nullable: true })
+  buyPrice: number;
+
+  @Column("float", { nullable: true })
+  sellPrice: number;
 }

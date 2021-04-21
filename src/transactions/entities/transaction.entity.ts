@@ -1,15 +1,29 @@
 import { Auditable } from "src/shared/entities/auditable.entity";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { User } from "src/users/entities/user.entity";
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, Index } from "typeorm";
 
 @Entity()
 export class Transaction extends Auditable {
   @PrimaryGeneratedColumn()
   id: number;
 
-  //TODO
-  supplier: string;
-  receiver: string;
-
   @Column("float")
   amount: number;
+
+  @Column("float")
+  price: number;
+
+  @Column("int")
+  @Index()
+  consumerId: number;
+
+  @Column("int")
+  @Index()
+  prosumerId: number;
+
+  @ManyToOne(() => User)
+  consumer: User;
+
+  @ManyToOne(() => User)
+  prosumer: User;
 }

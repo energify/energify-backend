@@ -53,4 +53,8 @@ export class UsersService {
   }
 
   async logout() {}
+
+  async findById(id: number) {
+    return this.usersRepository.findOne(id);
+  }
 }
