@@ -1,8 +1,11 @@
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { isPast } from "date-fns";
 import { RedisModule } from "nestjs-redis";
-import { Measure } from "./entities/measure.entity";
+import { Roles } from "src/shared/enums/roles.enum";
+import { IAuthedUser } from "src/users/interfaces/iauthed-user.interface";
+import { UsersModule } from "src/users/users.module";
 import { MetersService } from "./meters.service";
 
 describe("MetersService", () => {
@@ -11,6 +14,7 @@ describe("MetersService", () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        UsersModule,
         TypeOrmModule.forRootAsync({
           imports: [ConfigModule.forRoot()],
           inject: [ConfigService],
@@ -37,7 +41,6 @@ describe("MetersService", () => {
             database: configService.get<string>("REDIS_NAME"),
           }),
         }),
-        TypeOrmModule.forFeature([Measure]),
       ],
       providers: [MetersService],
     }).compile();
@@ -49,5 +52,23 @@ describe("MetersService", () => {
     expect(metersService).toBeDefined();
   });
 
-  it("should update measurement of an user", async () => {});
+  it("should update and find measurement of an user", async () => {
+    const user: IAuthedUser = {
+      id: 4,
+      email: "vasco@energify.pt",
+      name: "Vasco Sousa",
+      role: Roles.Consumer,
+    };
+
+    await metersService.updateByUser(user, { value: 10 });
+    const measurement = await metersService.findByUser(user);
+
+    expect(measurement.value).toBe(10);
+    expect(measurement.userId).toBe(4);
+    expect(isPast(measurement.updatedAt)).toBe(true);
+  });
+
+  it("should reconstruct energy flow", async () => {
+    console.log(await metersService.match());
+  });
 });

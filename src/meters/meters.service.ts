@@ -1,23 +1,25 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { Interval } from "@nestjs/schedule";
-import { InjectRepository } from "@nestjs/typeorm";
 import { RedisService } from "nestjs-redis";
 import { Roles } from "src/shared/enums/roles.enum";
-import { IAuthedUser } from "src/users/interfaces/iauthed-user.entity";
-import { Repository } from "typeorm";
-import { UpdateMeter } from "./dto/update-meter.dto";
-import { Measure } from "./entities/measure.entity";
+import { IAuthedUser } from "src/users/interfaces/iauthed-user.interface";
+import { UsersService } from "src/users/users.service";
+import { UpdateMeasurement } from "./dto/update-measurement.dto";
+import { IMeasure } from "./interfaces/imeasure.interface";
+import { Book } from "./models/book.model";
 
 @Injectable()
 export class MetersService {
-  constructor(
-    @InjectRepository(Measure) private measurementsRepository: Repository<Measure>,
-    private redisService: RedisService
-  ) {}
+  constructor(private usersSerivce: UsersService, private redisService: RedisService) {}
 
   async findAll() {
-    const metersTxt = await this.redisService.getClient().keys("meter.*");
-    return metersTxt.map((m) => JSON.parse(m)) as Measure[];
+    const keys = await this.redisService.getClient().keys("measurement.*");
+    const values = new Array<IMeasure>();
+
+    for (const key of keys) {
+      values.push(JSON.parse(await this.redisService.getClient().get(key)));
+    }
+
+    return values;
   }
 
   async findByUser(user: IAuthedUser) {
@@ -25,30 +27,39 @@ export class MetersService {
       throw new BadRequestException("You must verify your account first.");
     }
 
-    const meterTxt = await this.redisService.getClient().get(`meter.${user.id}`);
-    const meter = JSON.parse(meterTxt) as Measure;
+    const measurementTxt = await this.redisService.getClient().get(`measurement.${user.id}`);
+    const measurement = JSON.parse(measurementTxt) as IMeasure;
 
-    if (!meter) {
-      throw new NotFoundException("Meter not found.");
+    if (!measurement) {
+      throw new NotFoundException("Measurement not found.");
     }
 
-    return meter;
+    return {
+      ...measurement,
+      updatedAt: new Date(measurement.updatedAt),
+    };
   }
 
-  async updateByUser(user: IAuthedUser, dto: UpdateMeter) {
+  async updateByUser(user: IAuthedUser, dto: UpdateMeasurement) {
     if (user.role === Roles.Unverified) {
-      throw new BadRequestException("You must verify your account first.");
+      throw new BadRequestException("User must verify your account first.");
     }
 
-    const meterTxt = JSON.stringify({
+    const prices = await this.usersSerivce.findPricesById(user.id);
+
+    if (!prices) {
+      throw new BadRequestException("User must set buy and sell price first.");
+    }
+
+    const measurement: IMeasure = {
       userId: user.id,
-      measurement: dto.measurement,
+      value: dto.value,
       updatedAt: new Date(),
-    });
+    };
 
-    await this.redisService.getClient().set(`meter.${user.id}`, meterTxt);
+    await this.redisService.getClient().set(`measurement.${user.id}`, JSON.stringify(measurement));
 
-    return { message: "Meter updated" };
+    return { message: "Measurement updated" };
   }
 
   async deleteByUser(user: IAuthedUser) {
@@ -56,29 +67,23 @@ export class MetersService {
       throw new BadRequestException("You must verify your account first.");
     }
 
-    const count = await this.redisService.getClient().del(`meter.${user.id}`);
+    const count = await this.redisService.getClient().del(`measurement.${user.id}`);
 
     if (count === 0) {
-      throw new NotFoundException("Meter not found.");
+      throw new NotFoundException("Measurement not found.");
     }
 
-    return { message: "Meter deleted" };
+    return { message: "Measurement deleted" };
   }
 
   async deleteAll() {
-    await this.redisService.getClient().del("meter.*");
+    await this.redisService.getClient().del("measurement.*");
   }
 
-  async persist(measurements: Measure[]) {
-    return this.measurementsRepository.save(measurements);
-  }
-
-  @Interval(15000)
-  async monitor() {
+  async match() {
     const measurements = await this.findAll();
-    const negativeMeasurements = measurements.filter((m) => m.value < 0);
-    const positiveMeasurements = measurements.filter((m) => m.value > 0);
+    const prices = await this.usersSerivce.findAllPrices();
 
-    return this.persist(measurements);
+    return Book.createFrom(measurements, prices).match();
   }
 }

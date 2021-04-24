@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Put } from "@nestjs/common";
 import { AuthedUser } from "src/shared/decorators/authed-user.decorator";
-import { IAuthedUser } from "src/users/interfaces/iauthed-user.entity";
+import { IAuthedUser } from "src/users/interfaces/iauthed-user.interface";
 import { UpdatePaymentDto } from "./dto/update-payment.dto";
 import { PaymentsService } from "./payments.service";
 

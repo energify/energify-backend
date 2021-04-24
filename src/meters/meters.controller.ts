@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Put } from "@nestjs/common";
 import { AuthedUser } from "src/shared/decorators/authed-user.decorator";
-import { IAuthedUser } from "src/users/interfaces/iauthed-user.entity";
-import { UpdateMeter } from "./dto/update-meter.dto";
+import { IAuthedUser } from "src/users/interfaces/iauthed-user.interface";
+import { UpdateMeasurement } from "./dto/update-measurement.dto";
 import { MetersService } from "./meters.service";
 
 @Controller("meters")
@@ -14,7 +14,7 @@ export class MetersController {
   }
 
   @Put("user")
-  async updateByAuthedUser(@Body() dto: UpdateMeter, @AuthedUser() user: IAuthedUser) {
+  async updateByAuthedUser(@Body() dto: UpdateMeasurement, @AuthedUser() user: IAuthedUser) {
     return this.metersService.updateByUser(user, dto);
   }
 }

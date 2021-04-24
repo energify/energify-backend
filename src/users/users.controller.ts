@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Post, Put } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Post, Put } from "@nestjs/common";
 import { AuthedUser } from "src/shared/decorators/authed-user.decorator";
 import { Public } from "src/shared/decorators/public.decorator";
 import { CompleteDto } from "./dto/complete.dto";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
-import { IAuthedUser } from "./interfaces/iauthed-user.entity";
+import { UpdatePricesDto } from "./dto/update-prices.dto";
+import { IAuthedUser } from "./interfaces/iauthed-user.interface";
 import { UsersService } from "./users.service";
 
 @Controller("users")
@@ -24,9 +25,18 @@ export class UsersController {
   }
 
   @Put("complete")
-  async complete(@Body() dto: CompleteDto, @AuthedUser() authedUser: IAuthedUser) {
-    await this.usersService.complete(dto, authedUser);
-    return { message: "Account completed with success." };
+  async complete(@Body() dto: CompleteDto, @AuthedUser() user: IAuthedUser) {
+    return this.usersService.complete(dto, user);
+  }
+
+  @Put("prices")
+  async updatePriceByAuthedUser(@Body() dto: UpdatePricesDto, @AuthedUser() user: IAuthedUser) {
+    return this.usersService.updatePrices(dto, user);
+  }
+
+  @Get("prices")
+  async findPricesByAuthedUser(@AuthedUser() user: IAuthedUser) {
+    return this.usersService.findPricesById(user.id);
   }
 
   @Delete("logout")

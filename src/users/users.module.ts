@@ -4,9 +4,10 @@ import { UsersController } from "./users.controller";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { User } from "./entities/user.entity";
 import { ConfigModule } from "@nestjs/config";
+import { RedisModule } from "nestjs-redis";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), ConfigModule],
+  imports: [TypeOrmModule.forFeature([User]), RedisModule, ConfigModule],
   providers: [UsersService],
   controllers: [UsersController],
   exports: [UsersService],
