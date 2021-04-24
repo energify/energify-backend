@@ -17,9 +17,4 @@ export class MetersController {
   async updateByAuthedUser(@Body() dto: UpdateMeter, @AuthedUser() user: IAuthedUser) {
     return this.metersService.updateByUser(user, dto);
   }
-
-  @Delete("user")
-  async deleteByAuthedUser(@AuthedUser() user: IAuthedUser) {
-    return this.metersService.deleteByUser(user);
-  }
 }

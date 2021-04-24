@@ -27,8 +27,8 @@ export class Payment extends Auditable {
   prosumerId: number;
 
   @ManyToOne(() => User)
-  consumer: User;
+  consumer: Promise<User>;
 
   @ManyToOne(() => User)
-  prosumer: User;
+  prosumer: Promise<User>;
 }

@@ -1,5 +1,6 @@
-import { ForbiddenException, Injectable } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { HederaService } from "src/hedera/hedera.service";
 import { Repository } from "typeorm";
 import { CreatePaymentDto } from "./dto/create-payment.dto";
 import { UpdatePaymentDto } from "./dto/update-payment.dto";
@@ -8,7 +9,10 @@ import { PaymentStatus } from "./enums/payment.status";
 
 @Injectable()
 export class PaymentsService {
-  constructor(@InjectRepository(Payment) private paymentsRepository: Repository<Payment>) {}
+  constructor(
+    @InjectRepository(Payment) private paymentsRepository: Repository<Payment>,
+    private hederaService: HederaService
+  ) {}
 
   async create(dto: CreatePaymentDto) {
     return this.paymentsRepository.save({ ...dto });
@@ -16,14 +20,20 @@ export class PaymentsService {
 
   async update(id: number, dto: UpdatePaymentDto, authedUserId?: number) {
     const payment = await this.paymentsRepository.findOneOrFail(id);
+    const isDuplicated = !!(await this.findByHederaTransactionId(dto.hederaTransactionId));
 
-    if (!authedUserId && payment.consumerId !== authedUserId) {
-      throw new ForbiddenException();
+    const { hederaAccountId: senderId } = await payment.consumer;
+    const { hederaAccountId: receiverId } = await payment.prosumer;
+
+    if (isDuplicated) {
+      throw new BadRequestException("Hedera transaction id belongs to an old payment.");
+    } else if (!authedUserId && payment.consumerId !== authedUserId) {
+      throw new ForbiddenException("You cannot perform this payment.");
+    } else if (this.hederaService.isTransactionComplete(senderId, receiverId, payment.amount)) {
+      await this.paymentsRepository.update(id, { ...dto, status: PaymentStatus.Paid });
     }
 
-    //TODO: Check if payment is done or not using hedera network
-    //and update status accordingly.
-    return this.paymentsRepository.update(id, { ...dto });
+    throw new BadRequestException("Payment was not completed yet.");
   }
 
   async findByUserId(userId: number) {
@@ -48,5 +58,9 @@ export class PaymentsService {
         { consumerId: userId, status: PaymentStatus.Paid },
       ],
     });
+  }
+
+  async findByHederaTransactionId(hederaTransactionId: string) {
+    return this.paymentsRepository.findOne({ hederaTransactionId });
   }
 }

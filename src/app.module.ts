@@ -8,7 +8,8 @@ import { MetersModule } from "./meters/meters.module";
 import { TransactionsModule } from "./transactions/transactions.module";
 import { AuthGuard } from "./shared/guards/auth.guard";
 import { UsersModule } from "./users/users.module";
-import { PaymentsModule } from './payments/payments.module';
+import { PaymentsModule } from "./payments/payments.module";
+import { HederaModule } from "./hedera/hedera.module";
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { PaymentsModule } from './payments/payments.module';
     TransactionsModule,
     UsersModule,
     PaymentsModule,
+    HederaModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })

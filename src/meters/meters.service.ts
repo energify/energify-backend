@@ -1,13 +1,24 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { Interval } from "@nestjs/schedule";
+import { InjectRepository } from "@nestjs/typeorm";
 import { RedisService } from "nestjs-redis";
 import { Roles } from "src/shared/enums/roles.enum";
 import { IAuthedUser } from "src/users/interfaces/iauthed-user.entity";
+import { Repository } from "typeorm";
 import { UpdateMeter } from "./dto/update-meter.dto";
-import { Meter } from "./entities/meter.entity";
+import { Measure } from "./entities/measure.entity";
 
 @Injectable()
 export class MetersService {
-  constructor(private redisService: RedisService) {}
+  constructor(
+    @InjectRepository(Measure) private measurementsRepository: Repository<Measure>,
+    private redisService: RedisService
+  ) {}
+
+  async findAll() {
+    const metersTxt = await this.redisService.getClient().keys("meter.*");
+    return metersTxt.map((m) => JSON.parse(m)) as Measure[];
+  }
 
   async findByUser(user: IAuthedUser) {
     if (user.role === Roles.Unverified) {
@@ -15,7 +26,7 @@ export class MetersService {
     }
 
     const meterTxt = await this.redisService.getClient().get(`meter.${user.id}`);
-    const meter = JSON.parse(meterTxt) as Meter;
+    const meter = JSON.parse(meterTxt) as Measure;
 
     if (!meter) {
       throw new NotFoundException("Meter not found.");
@@ -52,5 +63,22 @@ export class MetersService {
     }
 
     return { message: "Meter deleted" };
+  }
+
+  async deleteAll() {
+    await this.redisService.getClient().del("meter.*");
+  }
+
+  async persist(measurements: Measure[]) {
+    return this.measurementsRepository.save(measurements);
+  }
+
+  @Interval(15000)
+  async monitor() {
+    const measurements = await this.findAll();
+    const negativeMeasurements = measurements.filter((m) => m.value < 0);
+    const positiveMeasurements = measurements.filter((m) => m.value > 0);
+
+    return this.persist(measurements);
   }
 }
