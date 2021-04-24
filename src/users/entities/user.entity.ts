@@ -1,4 +1,3 @@
-import { Meter } from "src/meters/entities/meter.entity";
 import { Auditable } from "src/shared/entities/auditable.entity";
 import { Roles } from "src/shared/enums/roles.enum";
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
@@ -42,7 +41,7 @@ export class User extends Auditable {
   role: Roles;
 
   @Column("varchar", { nullable: true })
-  hashgraphAccountId: string;
+  hederaAccountId: string;
 
   @Column("float", { nullable: true })
   buyPrice: number;
