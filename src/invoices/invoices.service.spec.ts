@@ -3,6 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Payment } from "src/payments/entities/payment.entity";
 import { PaymentsModule } from "src/payments/payments.module";
+import { IAuthedUser } from "src/users/interfaces/iauthed-user.entity";
 import { InvoicesService } from "./invoices.service";
 
 jest.setTimeout(50000);
@@ -42,6 +43,8 @@ describe("InvoicesService", () => {
   });
 
   it("should save pdf", async () => {
-    console.log(await service.generatePdfByPaymentId(9));
+    expect(service.generatePdfByPaymentId(9, { id: 5 } as IAuthedUser)).rejects.toThrowError(
+      "User do not have permission to visualize this invoice."
+    );
   });
 });

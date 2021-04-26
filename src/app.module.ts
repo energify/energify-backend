@@ -10,7 +10,7 @@ import { AuthGuard } from "./shared/guards/auth.guard";
 import { UsersModule } from "./users/users.module";
 import { PaymentsModule } from "./payments/payments.module";
 import { HederaModule } from "./hedera/hedera.module";
-import { InvoicesModule } from './invoices/invoices.module';
+import { InvoicesModule } from "./invoices/invoices.module";
 
 @Module({
   imports: [
