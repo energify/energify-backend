@@ -29,11 +29,22 @@ export class PaymentsService {
       throw new BadRequestException("Hedera transaction id belongs to an old payment.");
     } else if (!authedUserId && payment.consumerId !== authedUserId) {
       throw new ForbiddenException("You cannot perform this payment.");
-    } else if (this.hederaService.isTransactionComplete(senderId, receiverId, payment.amount)) {
+    } else if (
+      this.hederaService.isTransactionValid(
+        payment.hederaTransactionId,
+        senderId,
+        receiverId,
+        payment.amount
+      )
+    ) {
       await this.paymentsRepository.update(id, { ...dto, status: PaymentStatus.Paid });
     }
 
     throw new BadRequestException("Payment was not completed yet.");
+  }
+
+  async findById(id: number) {
+    return this.paymentsRepository.findOne(id);
   }
 
   async findByUserId(userId: number) {
