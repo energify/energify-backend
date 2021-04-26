@@ -21,6 +21,7 @@ export class InvoicesService {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
+        logo: "https://energify.pt/logo-small.png",
         from: prosumer.name,
         to: consumer.name,
         number: payment.id,
