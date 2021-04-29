@@ -8,14 +8,18 @@ import { Repository } from "typeorm";
 import { hash, compare } from "bcrypt";
 import { sign as signJwt } from "jsonwebtoken";
 import { ConfigService } from "@nestjs/config";
-import { IAuthedUser } from "./interfaces/iauthed-user.entity";
+import { IAuthedUser } from "./interfaces/iauthed-user.interface";
 import { Roles } from "src/shared/enums/roles.enum";
+import { RedisService } from "nestjs-redis";
+import { UpdatePricesDto } from "./dto/update-prices.dto";
+import { IPrices } from "./interfaces/iprices.interface";
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private usersRepository: Repository<User>,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private redisService: RedisService
   ) {}
 
   async login(dto: LoginDto) {
@@ -49,7 +53,22 @@ export class UsersService {
       throw new BadRequestException("Account is already completed");
     }
 
-    return this.usersRepository.update(user.id, { ...dto, role: Roles.Consumer });
+    await this.usersRepository.update(user.id, { ...dto, role: Roles.Consumer });
+
+    return { message: "Account completed with success." };
+  }
+
+  async updatePrices(dto: UpdatePricesDto, authedUser: IAuthedUser) {
+    const prices: IPrices = {
+      buyPrice: dto.buyPrice,
+      sellPrice: dto.sellPrice,
+      updatedAt: new Date(),
+      userId: authedUser.id,
+    };
+
+    await this.redisService.getClient().set(`prices.${authedUser.id}`, JSON.stringify(prices));
+
+    return { message: "Prices updated with success." };
   }
 
   async logout() {}
@@ -72,5 +91,26 @@ export class UsersService {
 
   async findProsumerByIds(id: number[]) {
     return this.usersRepository.findByIds(id, { where: { role: Roles.Prosumer } });
+  }
+
+  async findPricesById(id: number) {
+    const pricesTxt = await this.redisService.getClient().get(`prices.${id}`);
+
+    if (pricesTxt === "") {
+      return undefined;
+    }
+
+    return JSON.parse(pricesTxt) as IPrices;
+  }
+
+  async findAllPrices() {
+    const keys = await this.redisService.getClient().keys("prices.*");
+    const values = new Array<IPrices>();
+
+    for (const key of keys) {
+      values.push(JSON.parse(await this.redisService.getClient().get(key)));
+    }
+
+    return values;
   }
 }

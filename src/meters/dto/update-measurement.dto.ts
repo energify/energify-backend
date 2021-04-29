@@ -1,7 +1,7 @@
 import { IsNumber, Min } from "class-validator";
 
-export class UpdateMeter {
+export class UpdateMeasurement {
   @Min(0.1)
   @IsNumber()
-  measurement: number;
+  value: number;
 }

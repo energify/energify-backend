@@ -42,10 +42,4 @@ export class User extends Auditable {
 
   @Column("varchar", { nullable: true })
   hederaAccountId: string;
-
-  @Column("float", { nullable: true })
-  buyPrice: number;
-
-  @Column("float", { nullable: true })
-  sellPrice: number;
 }
