@@ -16,7 +16,7 @@ export class AuthGuard implements CanActivate {
     if (isPublic) {
       return true;
     } else if (!request.header("authorization")) {
-      return true;
+      return false;
     }
 
     const bearer = request.header("authorization").replace("Bearer ", "");

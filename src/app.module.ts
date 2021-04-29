@@ -10,6 +10,7 @@ import { AuthGuard } from "./shared/guards/auth.guard";
 import { UsersModule } from "./users/users.module";
 import { PaymentsModule } from "./payments/payments.module";
 import { HederaModule } from "./hedera/hedera.module";
+import { InvoicesModule } from "./invoices/invoices.module";
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { HederaModule } from "./hedera/hedera.module";
     UsersModule,
     PaymentsModule,
     HederaModule,
+    InvoicesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })
