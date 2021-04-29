@@ -7,7 +7,6 @@ import { IHederaTransaction } from "./interfaces/ihedera-transaction.interface";
 @Injectable()
 export class HederaService {
   private mirrorUrl: string;
-  private hbarToEurRate: number;
 
   constructor(private configService: ConfigService) {
     this.mirrorUrl = this.configService.get<string>("HEDERA_MIRROR_URL");
@@ -17,16 +16,13 @@ export class HederaService {
     const response = await fetch(`${this.mirrorUrl}/api/v1/transactions?account.id=${accountId}`);
     const { transactions } = await response.json();
 
-    return transactions.find((t) => t.transaction_id === transactionId) as IHederaTransaction;
+    return transactions.find(
+      (t: IHederaTransaction) => t.transaction_id === transactionId
+    ) as IHederaTransaction;
   }
 
-  async isTransactionValid(
-    transactionId: string,
-    senderId: string,
-    receiverId: string,
-    amount: number
-  ) {
-    const { transfers, result } = await this.findTransactionByAccountId(transactionId, senderId);
+  async isTransactionValid(tid: string, senderId: string, receiverId: string, amount: number) {
+    const { transfers, result } = await this.findTransactionByAccountId(tid, senderId);
 
     const { amount: senderAmount } = transfers.find((t) => t.account === senderId);
     const { amount: receiverAmount } = transfers.find((t) => t.account === receiverId);

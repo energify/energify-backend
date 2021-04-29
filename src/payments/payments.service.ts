@@ -44,7 +44,7 @@ export class PaymentsService {
   }
 
   async findById(id: number) {
-    return this.paymentsRepository.findOne(id);
+    return this.paymentsRepository.findOneOrFail(id);
   }
 
   async findByUserId(userId: number) {

@@ -11,9 +11,12 @@ export class AuthGuard implements CanActivate {
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest() as Request;
-    const isPublic = this.reflector.get<boolean>(IS_PUBLIC, context.getClass());
+    const isPublic = this.reflector.getAll<boolean[]>(IS_PUBLIC, [
+      context.getClass(),
+      context.getHandler(),
+    ]);
 
-    if (isPublic) {
+    if (isPublic.includes(true)) {
       return true;
     } else if (!request.header("authorization")) {
       return false;

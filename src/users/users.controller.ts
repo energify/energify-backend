@@ -34,6 +34,11 @@ export class UsersController {
     return this.usersService.updatePrices(dto, user);
   }
 
+  @Get("details")
+  async details(@AuthedUser() user: IAuthedUser) {
+    return this.usersService.findById(user.id);
+  }
+
   @Get("prices")
   async findPricesByAuthedUser(@AuthedUser() user: IAuthedUser) {
     return this.usersService.findPricesById(user.id);

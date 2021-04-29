@@ -2,7 +2,7 @@ import { Controller, Get, Header, Param, Res } from "@nestjs/common";
 import { Response } from "express";
 import { AuthedUser } from "src/shared/decorators/authed-user.decorator";
 import { Public } from "src/shared/decorators/public.decorator";
-import { IAuthedUser } from "src/users/interfaces/iauthed-user.entity";
+import { IAuthedUser } from "src/users/interfaces/iauthed-user.interface";
 import { InvoicesService } from "./invoices.service";
 
 @Controller("invoices")
@@ -10,6 +10,7 @@ export class InvoicesController {
   constructor(private invoicesService: InvoicesService) {}
 
   @Get(":paymentId")
+  @Public()
   async generatePdf(
     @Res() res: Response,
     @Param("paymentId") paymentId: number,

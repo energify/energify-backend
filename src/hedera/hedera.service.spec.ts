@@ -1,4 +1,4 @@
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ConfigModule } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
 import { HederaService } from "./hedera.service";
 
@@ -30,7 +30,7 @@ describe("HederaService", () => {
     expect(transaction.consensus_timestamp).toBe("1619180475.823211000");
   });
 
-  it("should validate transaction ", async () => {
+  it("should validate transaction", async () => {
     const isValid = await hederaService.isTransactionValid(
       "0.0.460923-1619180491-247405115",
       "0.0.539171",

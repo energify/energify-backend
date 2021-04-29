@@ -14,6 +14,7 @@ export interface IBookMatch {
 }
 
 export class Book {
+  private policy: string;
   private sellMap: Map<number, Set<IBookEntry>>;
   private buyMap: Map<number, Set<IBookEntry>>;
 
@@ -82,7 +83,7 @@ export class Book {
 
         if (buyEntry.amount !== 0) {
           matches.push({
-            amount: buyEntry.amount,
+            amount: -buyEntry.amount,
             price: 1.2,
             consumerId: buyEntry.userId,
             producerId: -1,

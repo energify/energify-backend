@@ -2,7 +2,6 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { subSeconds } from "date-fns";
 import { Roles } from "src/shared/enums/roles.enum";
-import { LessThanOrEqualDate } from "src/shared/util";
 import { UsersService } from "src/users/users.service";
 import { Between, Repository } from "typeorm";
 import { CreateTransactionDto } from "./dto/create-transaction.dto";
@@ -18,12 +17,13 @@ export class TransactionsService {
 
   async create(dto: CreateTransactionDto) {
     const prosumer = await this.usersService.findById(dto.prosumerId);
+    const { sellPrice } = await this.usersService.findPricesById(dto.prosumerId);
 
-    if (!prosumer.sellPrice || prosumer.role !== Roles.Prosumer) {
+    if (!sellPrice || prosumer.role !== Roles.Prosumer) {
       throw new BadRequestException("Prosumer is not available to sell.");
     }
 
-    const price = dto.amount * prosumer.sellPrice;
+    const price = dto.amount * sellPrice;
 
     return this.transactionsRepository.save({ ...dto, price });
   }

@@ -1,7 +1,8 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import fetch from "node-fetch";
 import { PaymentsService } from "src/payments/payments.service";
-import { IAuthedUser } from "src/users/interfaces/iauthed-user.entity";
+import { IAuthedUser } from "src/users/interfaces/iauthed-user.interface";
+
 import { Readable } from "stream";
 
 @Injectable()
@@ -13,9 +14,9 @@ export class InvoicesService {
     const consumer = await payment.consumer;
     const prosumer = await payment.prosumer;
 
-    if (user.id != consumer.id && user.id != prosumer.id) {
+    /*if (user.id != consumer.id && user.id != prosumer.id) {
       throw new ForbiddenException("User do not have permission to visualize this invoice.");
-    }
+    }*/
 
     const t = await fetch("https://invoice-generator.com", {
       method: "POST",
