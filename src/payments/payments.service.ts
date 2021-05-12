@@ -95,6 +95,7 @@ export class PaymentsService {
         consumerId: transaction.id,
         prosumerId: transaction.id,
       });
+
       await this.transactionsService.updatePaymentIdById(transaction.id, id);
       others.forEach((o) => doneTransactions.add(o.id));
     }

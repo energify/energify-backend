@@ -7,7 +7,7 @@ import { PUBLIC_GRID_USER_ID } from "src/shared/consts";
 import { Roles } from "src/shared/enums/roles.enum";
 import { User } from "src/users/entities/user.entity";
 import { UsersService } from "src/users/users.service";
-import { Between, Repository } from "typeorm";
+import { Between, IsNull, Not, Repository } from "typeorm";
 import { CreateTransactionDto } from "./dto/create-transaction.dto";
 import { Transaction } from "./entities/transaction.entity";
 
@@ -45,9 +45,13 @@ export class TransactionsService {
     });
   }
 
-  async findLastNSeconds(lastNSeconds: number) {
+  async findLastNSeconds(lastNSeconds: number, includePublicGrid: boolean = false) {
     return this.transactionsRepository.find({
-      where: { createdAt: Between(subSeconds(new Date(), lastNSeconds), new Date()) },
+      where: {
+        createdAt: Between(subSeconds(new Date(), lastNSeconds), new Date()),
+        consumerId: includePublicGrid ? Not(IsNull()) : Not(0),
+        prosumerId: includePublicGrid ? Not(IsNull()) : Not(0),
+      },
     });
   }
 
