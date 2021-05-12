@@ -90,11 +90,12 @@ export class PaymentsService {
       const others = transactions.filter(
         (t) => t.consumerId === transaction.consumerId && t.prosumerId === transaction.prosumerId
       );
-      await this.create({
+      const { id } = await this.create({
         amount: others.reduce((a, b) => +a + +b.amount * b.price, 0),
         consumerId: transaction.id,
         prosumerId: transaction.id,
       });
+      await this.transactionsService.updatePaymentIdById(transaction.id, id);
       others.forEach((o) => doneTransactions.add(o.id));
     }
   }

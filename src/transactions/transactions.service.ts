@@ -31,6 +31,10 @@ export class TransactionsService {
     return this.transactionsRepository.delete(id);
   }
 
+  async updatePaymentIdById(id: number, paymentId: number) {
+    return this.transactionsRepository.update(id, { paymentId });
+  }
+
   async findById(id: number) {
     return this.transactionsRepository.findOneOrFail(id);
   }
