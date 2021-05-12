@@ -43,7 +43,6 @@ export class UsersService {
     const user = this.usersRepository.create({
       ...dto,
       password: encPassword,
-      bornAt: dto.birthday,
     });
     const { password, ...userWithoutPassword } = await this.usersRepository.save(user);
 
