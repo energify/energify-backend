@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
 import { CompleteDto } from "./dto/complete.dto";
@@ -40,7 +40,11 @@ export class UsersService {
     }
 
     const encPassword = await hash(dto.password, 10);
-    const user = this.usersRepository.create({ ...dto, password: encPassword });
+    const user = this.usersRepository.create({
+      ...dto,
+      password: encPassword,
+      bornAt: dto.birthday,
+    });
     const { password, ...userWithoutPassword } = await this.usersRepository.save(user);
 
     return userWithoutPassword;
@@ -96,8 +100,8 @@ export class UsersService {
   async findPricesById(id: number) {
     const pricesTxt = await this.redisService.getClient().get(`prices.${id}`);
 
-    if (pricesTxt === "") {
-      return undefined;
+    if (!pricesTxt) {
+      throw new NotFoundException("User did not set prices yet.");
     }
 
     return JSON.parse(pricesTxt) as IPrices;

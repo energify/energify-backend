@@ -22,9 +22,6 @@ export class User extends Auditable {
   @Column("varchar")
   password: string;
 
-  @Column("varchar")
-  sex: string;
-
   @Column("varchar", { nullable: true })
   address: string;
 

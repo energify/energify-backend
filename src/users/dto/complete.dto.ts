@@ -1,4 +1,4 @@
-import { IsNotEmpty } from "class-validator";
+import { IsNotEmpty, IsOptional } from "class-validator";
 
 export class CompleteDto {
   @IsNotEmpty()
@@ -8,5 +8,8 @@ export class CompleteDto {
   address: string;
 
   @IsNotEmpty()
+  hederaAccountId: string;
+
+  @IsOptional()
   pictureUrl: string;
 }

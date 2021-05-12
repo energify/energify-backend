@@ -12,14 +12,10 @@ export class RegisterDto {
   @IsNotEmpty()
   password: string;
 
-  @IsDate()
-  @Transform(({ value }) => parseDate(value, "dd/MM/yyyy", new Date()))
-  bornAt: Date;
+  @IsNotEmpty()
+  @Transform(({ value }) => parseDate(value, "yyyy-MM-dd", new Date()))
+  birthday: Date;
 
   @IsString()
   cc: string;
-
-  @IsString()
-  @IsIn(["M", "F", "U"])
-  sex: string;
 }

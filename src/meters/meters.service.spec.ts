@@ -58,6 +58,7 @@ describe("MetersService", () => {
       email: "vasco@energify.pt",
       name: "Vasco Sousa",
       role: Roles.Consumer,
+      birthdate: new Date(),
     };
 
     await metersService.updateByUser(user, { value: 10 });
