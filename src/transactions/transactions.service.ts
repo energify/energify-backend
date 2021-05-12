@@ -3,7 +3,9 @@ import { Interval } from "@nestjs/schedule";
 import { InjectRepository } from "@nestjs/typeorm";
 import { subSeconds } from "date-fns";
 import { MetersService } from "src/meters/meters.service";
+import { PUBLIC_GRID_USER_ID } from "src/shared/consts";
 import { Roles } from "src/shared/enums/roles.enum";
+import { User } from "src/users/entities/user.entity";
 import { UsersService } from "src/users/users.service";
 import { Between, Repository } from "typeorm";
 import { CreateTransactionDto } from "./dto/create-transaction.dto";
@@ -14,21 +16,15 @@ export class TransactionsService {
   constructor(
     @InjectRepository(Transaction)
     private transactionsRepository: Repository<Transaction>,
-    private usersService: UsersService,
     private metersService: MetersService
   ) {}
 
   async create(dto: CreateTransactionDto) {
-    const prosumer = await this.usersService.findById(dto.prosumerId);
-    const { sellPrice } = await this.usersService.findPricesById(dto.prosumerId);
-
-    if (!sellPrice || prosumer.role !== Roles.Prosumer) {
-      throw new BadRequestException("Prosumer is not available to sell.");
-    }
-
-    const price = dto.amount * sellPrice;
-
-    return this.transactionsRepository.save({ ...dto, price });
+    return this.transactionsRepository.save({
+      ...dto,
+      prosumerId: dto.prosumerId !== PUBLIC_GRID_USER_ID ? dto.prosumerId : undefined,
+      consumerId: dto.consumerId !== PUBLIC_GRID_USER_ID ? dto.consumerId : undefined,
+    });
   }
 
   async delete(id: number) {

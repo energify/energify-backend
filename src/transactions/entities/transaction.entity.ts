@@ -14,11 +14,11 @@ export class Transaction extends Auditable {
   @Column("float")
   price: number;
 
-  @Column("int")
+  @Column("int", { nullable: true })
   @Index()
   consumerId: number;
 
-  @Column("int")
+  @Column("int", { nullable: true })
   @Index()
   prosumerId: number;
 
@@ -27,10 +27,10 @@ export class Transaction extends Auditable {
   paymentId: number;
 
   @ManyToOne(() => User)
-  consumer: Promise<User>;
+  consumer?: Promise<User> | undefined;
 
   @ManyToOne(() => User)
-  prosumer: Promise<User>;
+  prosumer?: Promise<User> | undefined;
 
   @ManyToOne(() => Payment)
   payment: Payment;

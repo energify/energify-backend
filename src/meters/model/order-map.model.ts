@@ -1,3 +1,8 @@
+import {
+  PUBLIC_GRID_BUY_PRICE,
+  PUBLIC_GRID_SELL_PRICE,
+  PUBLIC_GRID_USER_ID,
+} from "src/shared/consts";
 import { IPrices } from "src/users/interfaces/iprices.interface";
 import { IMatch } from "../interfaces/imatch.interface";
 import { IMeasure } from "../interfaces/imeasure.interface";
@@ -42,7 +47,7 @@ export class OrderMap {
         if (seller.amount === 0) continue;
 
         if (seller.price > buyer.price) {
-          this.addMatch(buyer.amount, buyer.userId, -1, 1.2);
+          this.addMatch(buyer.amount, buyer.userId, PUBLIC_GRID_USER_ID, PUBLIC_GRID_BUY_PRICE);
           break;
         }
 
@@ -65,7 +70,7 @@ export class OrderMap {
     }
 
     for (const seller of sortedSellers.filter((s) => s.amount !== 0)) {
-      this.addMatch(seller.amount, -1, seller.userId, 1.2);
+      this.addMatch(seller.amount, PUBLIC_GRID_USER_ID, seller.userId, PUBLIC_GRID_SELL_PRICE);
     }
 
     return this.matches;
