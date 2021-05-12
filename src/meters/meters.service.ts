@@ -73,7 +73,11 @@ export class MetersService {
   }
 
   async deleteAll() {
-    await this.redisService.getClient().del("measurement.*");
+    const keys = await this.redisService.getClient().keys("measurement.*");
+
+    for (const key of keys) {
+      await this.redisService.getClient().del(key);
+    }
   }
 
   async match() {
