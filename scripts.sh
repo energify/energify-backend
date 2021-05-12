@@ -1,5 +1,5 @@
 redis_show() {
-    echo $1'*' | redis-cli | sed 's/^/get /' | redis-cli 
+    echo '$1*' | redis-cli | sed 's/^/get /' | redis-cli 
 }
 
 redis_del() {
