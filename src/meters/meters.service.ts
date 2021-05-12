@@ -79,6 +79,8 @@ export class MetersService {
   async match() {
     const prices = await this.usersSerivce.findAllPrices();
     const measurements = await this.findAll();
+    await this.deleteAll();
+
     return new OrderMap(prices, measurements).match();
   }
 }
