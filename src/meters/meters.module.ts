@@ -7,5 +7,6 @@ import { UsersModule } from "src/users/users.module";
   imports: [UsersModule],
   providers: [MetersService],
   controllers: [MetersController],
+  exports: [MetersService],
 })
 export class MetersModule {}

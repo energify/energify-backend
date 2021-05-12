@@ -26,7 +26,7 @@ export class User extends Auditable {
   address: string;
 
   @Column("datetime")
-  bornAt: Date;
+  birthday: Date;
 
   @Column("varchar", { nullable: true })
   pictureUrl: string;

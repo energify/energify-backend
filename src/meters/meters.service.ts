@@ -5,7 +5,7 @@ import { IAuthedUser } from "src/users/interfaces/iauthed-user.interface";
 import { UsersService } from "src/users/users.service";
 import { UpdateMeasurement } from "./dto/update-measurement.dto";
 import { IMeasure } from "./interfaces/imeasure.interface";
-import { Book } from "./models/book.model";
+import { OrderMap } from "./model/order-map.model";
 
 @Injectable()
 export class MetersService {
@@ -51,11 +51,7 @@ export class MetersService {
       throw new BadRequestException("User must set buy and sell price first.");
     }
 
-    const measurement: IMeasure = {
-      userId: user.id,
-      value: dto.value,
-      updatedAt: new Date(),
-    };
+    const measurement: IMeasure = { userId: user.id, value: dto.value, updatedAt: new Date() };
 
     await this.redisService.getClient().set(`measurement.${user.id}`, JSON.stringify(measurement));
 
@@ -81,9 +77,8 @@ export class MetersService {
   }
 
   async match() {
-    const measurements = await this.findAll();
     const prices = await this.usersSerivce.findAllPrices();
-
-    return Book.createFrom(measurements, prices).match();
+    const measurements = await this.findAll();
+    return new OrderMap(prices, measurements).match();
   }
 }
