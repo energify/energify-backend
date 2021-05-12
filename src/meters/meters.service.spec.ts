@@ -53,23 +53,38 @@ describe("MetersService", () => {
   });
 
   it("should update and find measurement of an user", async () => {
-    const user: IAuthedUser = {
-      id: 4,
+    const user1: IAuthedUser = {
+      id: 15,
       email: "vasco@energify.pt",
       name: "Vasco Sousa",
-      role: Roles.Consumer,
+      role: Roles.Prosumer,
       birthdate: new Date(),
     };
 
-    await metersService.updateByUser(user, { value: 10 });
-    const measurement = await metersService.findByUser(user);
+    const user2: IAuthedUser = {
+      id: 5,
+      email: "test@energify.pt",
+      name: "Test Account",
+      role: Roles.Prosumer,
+      birthdate: new Date(),
+    };
 
-    expect(measurement.value).toBe(10);
-    expect(measurement.userId).toBe(4);
-    expect(isPast(measurement.updatedAt)).toBe(true);
+    await metersService.updateByUser(user1, { value: 10 });
+    const measurement1 = await metersService.findByUser(user1);
+
+    await metersService.updateByUser(user2, { value: 5 });
+    const measurement2 = await metersService.findByUser(user2);
+
+    expect(measurement1.value).toBe(10);
+    expect(measurement1.userId).toBe(15);
+    expect(isPast(measurement1.updatedAt)).toBe(true);
+
+    expect(measurement2.value).toBe(5);
+    expect(measurement2.userId).toBe(5);
+    expect(isPast(measurement2.updatedAt)).toBe(true);
   });
 
   it("should reconstruct energy flow", async () => {
-    console.log(await metersService.match());
+    const ordersMap = await metersService.match();
   });
 });

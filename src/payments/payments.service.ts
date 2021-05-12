@@ -1,6 +1,8 @@
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
+import { Interval } from "@nestjs/schedule";
 import { InjectRepository } from "@nestjs/typeorm";
 import { HederaService } from "src/hedera/hedera.service";
+import { TransactionsService } from "src/transactions/transactions.service";
 import { Repository } from "typeorm";
 import { CreatePaymentDto } from "./dto/create-payment.dto";
 import { UpdatePaymentDto } from "./dto/update-payment.dto";
@@ -11,6 +13,7 @@ import { PaymentStatus } from "./enums/payment.status";
 export class PaymentsService {
   constructor(
     @InjectRepository(Payment) private paymentsRepository: Repository<Payment>,
+    private transactionsService: TransactionsService,
     private hederaService: HederaService
   ) {}
 
@@ -73,5 +76,26 @@ export class PaymentsService {
 
   async findByHederaTransactionId(hederaTransactionId: string) {
     return this.paymentsRepository.findOne({ hederaTransactionId });
+  }
+
+  @Interval(15000)
+  async issue() {
+    const transactions = await this.transactionsService.findLastNSeconds(15);
+    const doneTransactions = new Set<number>();
+
+    for (const transaction of transactions) {
+      if (doneTransactions.has(transaction.id)) {
+        continue;
+      }
+      const others = transactions.filter(
+        (t) => t.consumerId === transaction.consumerId && t.prosumerId === transaction.prosumerId
+      );
+      await this.create({
+        amount: others.reduce((a, b) => +a + +b.amount * b.price, 0),
+        consumerId: transaction.id,
+        prosumerId: transaction.id,
+      });
+      others.forEach((o) => doneTransactions.add(o.id));
+    }
   }
 }

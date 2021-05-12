@@ -1,6 +1,8 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import { Interval } from "@nestjs/schedule";
 import { InjectRepository } from "@nestjs/typeorm";
 import { subSeconds } from "date-fns";
+import { MetersService } from "src/meters/meters.service";
 import { Roles } from "src/shared/enums/roles.enum";
 import { UsersService } from "src/users/users.service";
 import { Between, Repository } from "typeorm";
@@ -12,7 +14,8 @@ export class TransactionsService {
   constructor(
     @InjectRepository(Transaction)
     private transactionsRepository: Repository<Transaction>,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private metersService: MetersService
   ) {}
 
   async create(dto: CreateTransactionDto) {
@@ -52,5 +55,19 @@ export class TransactionsService {
     return this.transactionsRepository.find({
       where: { createdAt: Between(subSeconds(new Date(), lastNSeconds), new Date()), consumerId },
     });
+  }
+
+  @Interval(15000)
+  async match() {
+    Logger.log("Matching started", "TransactionsService");
+
+    const matches = await this.metersService.match();
+
+    Logger.log(`Matching finished ${matches.length} matches done.`, "TransactionsService");
+
+    for (const match of matches) {
+      const { amount, consumerId, price, prosumerId } = match;
+      await this.create({ amount, consumerId, prosumerId, price });
+    }
   }
 }
