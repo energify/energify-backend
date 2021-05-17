@@ -12,3 +12,16 @@ export function MoreThanOrEqualDate(date: Date) {
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(() => resolve(undefined), ms));
 }
+
+export function intervalToHours(interval: "1h" | "1d" | "1w" | "1m" | "1y") {
+  if (interval === "1h") {
+    return 1;
+  } else if (interval === "1d") {
+    return 24;
+  } else if (interval === "1w") {
+    return 24 * 7;
+  } else if (interval === "1m") {
+    return 24 * 7 * 31;
+  }
+  return 12 * 24 * 7;
+}
