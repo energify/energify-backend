@@ -23,12 +23,14 @@ export class AuthGuard implements CanActivate {
     }
 
     const bearer = request.header("authorization").replace("Bearer ", "");
-    const isValidBearer = !!verifyJwt(bearer, this.configService.get<string>("JWT_SECRET"));
+    try {
+      const isValidBearer = !!verifyJwt(bearer, this.configService.get<string>("JWT_SECRET"));
 
-    if (isValidBearer) {
-      (request as any).user = decodeJwt(bearer);
-      return true;
-    }
+      if (isValidBearer) {
+        (request as any).user = decodeJwt(bearer);
+        return true;
+      }
+    } catch {}
 
     return false;
   }

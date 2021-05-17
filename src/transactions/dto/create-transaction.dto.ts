@@ -1,4 +1,4 @@
-import { IsNumber, Min } from "class-validator";
+import { IsDate, IsNumber, IsOptional, Min } from "class-validator";
 
 export class CreateTransactionDto {
   @IsNumber()

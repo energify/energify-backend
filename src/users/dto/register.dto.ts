@@ -1,5 +1,5 @@
 import { Transform } from "class-transformer";
-import { IsDate, IsEmail, IsIn, IsNotEmpty, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString } from "class-validator";
 import { parse as parseDate } from "date-fns";
 
 export class RegisterDto {

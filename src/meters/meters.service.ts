@@ -1,9 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { fromUnixTime } from "date-fns";
 import { RedisService } from "nestjs-redis";
-import { Roles } from "src/shared/enums/roles.enum";
-import { IAuthedUser } from "src/users/interfaces/iauthed-user.interface";
 import { UsersService } from "src/users/users.service";
-import { UpdateMeasurement } from "./dto/update-measurement.dto";
+import { AddMeasureDto } from "./dto/add-measure.dto";
 import { IMeasure } from "./interfaces/imeasure.interface";
 import { OrderMap } from "./model/order-map.model";
 
@@ -11,80 +10,69 @@ import { OrderMap } from "./model/order-map.model";
 export class MetersService {
   constructor(private usersSerivce: UsersService, private redisService: RedisService) {}
 
-  async findAll() {
-    const keys = await this.redisService.getClient().keys("measurement.*");
+  async findMeasuresByIndex(index: number) {
+    const redis = this.redisService.getClient();
+    const keys = await redis.keys("measurements.*");
     const values = new Array<IMeasure>();
 
     for (const key of keys) {
-      values.push(JSON.parse(await this.redisService.getClient().get(key)));
+      const value = JSON.parse((await redis.get(key)) as any)[index];
+      if (value) {
+        values.push(value);
+      }
     }
 
     return values;
   }
 
-  async findByUser(user: IAuthedUser) {
-    if (user.role === Roles.Unverified) {
-      throw new BadRequestException("You must verify your account first.");
+  async deleteMeasuresByIndex(index: number) {
+    const redis = this.redisService.getClient();
+    const keys = await redis.keys("measurements.*");
+
+    for (const key of keys) {
+      const values = JSON.parse(await redis.get(key)).filter((_, i) => i !== index);
+      await redis.set(key, JSON.stringify(values));
     }
-
-    const measurementTxt = await this.redisService.getClient().get(`measurement.${user.id}`);
-    const measurement = JSON.parse(measurementTxt) as IMeasure;
-
-    if (!measurement) {
-      throw new NotFoundException("Measurement not found.");
-    }
-
-    return {
-      ...measurement,
-      updatedAt: new Date(measurement.updatedAt),
-    };
   }
 
-  async updateByUser(user: IAuthedUser, dto: UpdateMeasurement) {
-    if (user.role === Roles.Unverified) {
-      throw new BadRequestException("User must verify your account first.");
+  async findMeasuresByUserId(userId: number) {
+    const redis = this.redisService.getClient();
+    const measurementTxt = await redis.get(`measurements.${userId}`);
+
+    if (!measurementTxt) {
+      await redis.set(`measurements.${userId}`, "[]");
+      return [];
     }
 
-    const prices = await this.usersSerivce.findPricesById(user.id);
-
-    if (!prices) {
-      throw new BadRequestException("User must set buy and sell price first.");
-    }
-
-    const measurement: IMeasure = { userId: user.id, value: dto.value, updatedAt: new Date() };
-
-    await this.redisService.getClient().set(`measurement.${user.id}`, JSON.stringify(measurement));
-
-    return { message: "Measurement updated" };
+    return JSON.parse(measurementTxt) as IMeasure[];
   }
 
-  async deleteByUser(user: IAuthedUser) {
-    if (user.role === Roles.Unverified) {
-      throw new BadRequestException("You must verify your account first.");
-    }
-
-    const count = await this.redisService.getClient().del(`measurement.${user.id}`);
-
-    if (count === 0) {
-      throw new NotFoundException("Measurement not found.");
-    }
+  async deleteMeasuresByUserId(userId: number) {
+    const redis = this.redisService.getClient();
+    await redis.set(`measurements.${userId}`, "[]");
 
     return { message: "Measurement deleted" };
   }
 
-  async deleteAll() {
-    const keys = await this.redisService.getClient().keys("measurement.*");
+  async addMeasureByUserId(userId: number, dto: AddMeasureDto) {
+    const redis = this.redisService.getClient();
+    const measurements = await this.findMeasuresByUserId(userId);
 
-    for (const key of keys) {
-      await this.redisService.getClient().del(key);
-    }
+    measurements.push({ userId, value: dto.value, date: fromUnixTime(dto.timestamp) });
+    await redis.set(`measurements.${userId}`, JSON.stringify(measurements));
+
+    return { message: "Measurement added" };
   }
 
-  async match() {
+  async match(index: number) {
     const prices = await this.usersSerivce.findAllPrices();
-    const measurements = await this.findAll();
-    await this.deleteAll();
+    const measurements = await this.findMeasuresByIndex(index);
 
-    return new OrderMap(prices, measurements).match();
+    if (measurements.length !== 0) {
+      await this.deleteMeasuresByIndex(index);
+      return new OrderMap(prices, measurements).match();
+    }
+
+    return [];
   }
 }

@@ -9,20 +9,14 @@ import { IMeasure } from "../interfaces/imeasure.interface";
 import { IOrder } from "../interfaces/iorder.interface";
 
 export class OrderMap {
-  private buyOrders = new Array<IOrder>();
-  private sellOrders = new Array<IOrder>();
-  private publicGridOrders = new Array<IOrder>();
+  public buyOrders = new Array<IOrder>();
+  public sellOrders = new Array<IOrder>();
   private matches = new Array<IMatch>();
 
   constructor(prices: IPrices[], measurements: IMeasure[]) {
     for (const measurement of measurements) {
       const price = prices.find((p) => p.userId === measurement.userId);
       const { userId, value } = measurement;
-
-      if (!price) {
-        this.publicGridOrders.push({ amount: value, price: 1.2, userId });
-        continue;
-      }
 
       if (measurement.value > 0) {
         this.sellOrders.push({ amount: value, price: price.sellPrice, userId });
@@ -40,6 +34,10 @@ export class OrderMap {
       const buyer = sortedBuyers[bi];
 
       if (buyer.amount === 0) continue;
+
+      if (sortedSellers.length === 0) {
+        this.addMatch(buyer.amount, buyer.userId, PUBLIC_GRID_USER_ID, PUBLIC_GRID_BUY_PRICE);
+      }
 
       for (let si = 0; si < sortedSellers.length; si++) {
         const seller = sortedSellers[si];
