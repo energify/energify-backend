@@ -12,4 +12,7 @@ export class CreateTransactionDto {
 
   @Min(0.0)
   price: number;
+
+  @IsDate()
+  createdAt: Date;
 }

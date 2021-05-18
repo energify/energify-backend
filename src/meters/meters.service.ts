@@ -54,14 +54,16 @@ export class MetersService {
     return { message: "Measurement deleted" };
   }
 
-  async addMeasureByUserId(userId: number, dto: AddMeasureDto) {
+  async addMeasuresByUserId(userId: number, dto: AddMeasureDto) {
     const redis = this.redisService.getClient();
     const measurements = await this.findMeasuresByUserId(userId);
 
-    measurements.push({ userId, value: dto.value, date: fromUnixTime(dto.timestamp) });
-    await redis.set(`measurements.${userId}`, JSON.stringify(measurements));
+    for (const { timestamp, value } of dto.measures) {
+      measurements.push({ userId, value: value, date: fromUnixTime(timestamp) });
+      await redis.set(`measurements.${userId}`, JSON.stringify(measurements));
+    }
 
-    return { message: "Measurement added" };
+    return { message: "Measurements added" };
   }
 
   async match(index: number) {

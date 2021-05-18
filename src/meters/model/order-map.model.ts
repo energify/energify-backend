@@ -16,12 +16,12 @@ export class OrderMap {
   constructor(prices: IPrices[], measurements: IMeasure[]) {
     for (const measurement of measurements) {
       const price = prices.find((p) => p.userId === measurement.userId);
-      const { userId, value } = measurement;
+      const { userId, value, date: createdAt } = measurement;
 
       if (measurement.value > 0) {
-        this.sellOrders.push({ amount: value, price: price.sellPrice, userId });
+        this.sellOrders.push({ amount: value, price: price.sellPrice, userId, createdAt });
       } else {
-        this.buyOrders.push({ amount: Math.abs(value), price: price.buyPrice, userId });
+        this.buyOrders.push({ amount: Math.abs(value), price: price.buyPrice, userId, createdAt });
       }
     }
   }
@@ -36,7 +36,13 @@ export class OrderMap {
       if (buyer.amount === 0) continue;
 
       if (sortedSellers.length === 0) {
-        this.addMatch(buyer.amount, buyer.userId, PUBLIC_GRID_USER_ID, PUBLIC_GRID_BUY_PRICE);
+        this.addMatch(
+          buyer.amount,
+          buyer.userId,
+          PUBLIC_GRID_USER_ID,
+          PUBLIC_GRID_BUY_PRICE,
+          buyer.createdAt
+        );
       }
 
       for (let si = 0; si < sortedSellers.length; si++) {
@@ -45,21 +51,27 @@ export class OrderMap {
         if (seller.amount === 0) continue;
 
         if (seller.price > buyer.price) {
-          this.addMatch(buyer.amount, buyer.userId, PUBLIC_GRID_USER_ID, PUBLIC_GRID_BUY_PRICE);
+          this.addMatch(
+            buyer.amount,
+            buyer.userId,
+            PUBLIC_GRID_USER_ID,
+            PUBLIC_GRID_BUY_PRICE,
+            buyer.createdAt
+          );
           break;
         }
 
         if (seller.amount < buyer.amount) {
-          this.addMatch(seller.amount, buyer.userId, seller.userId, seller.price);
+          this.addMatch(seller.amount, buyer.userId, seller.userId, seller.price, seller.createdAt);
           buyer.amount = parseFloat((buyer.amount - seller.amount).toFixed(2));
           seller.amount = 0;
         } else if (seller.amount === buyer.amount) {
-          this.addMatch(buyer.amount, buyer.userId, seller.userId, seller.price);
+          this.addMatch(buyer.amount, buyer.userId, seller.userId, seller.price, buyer.createdAt);
           seller.amount = 0;
           buyer.amount = 0;
           break;
         } else {
-          this.addMatch(buyer.amount, buyer.userId, seller.userId, seller.price);
+          this.addMatch(buyer.amount, buyer.userId, seller.userId, seller.price, buyer.createdAt);
           seller.amount = parseFloat((seller.amount - buyer.amount).toFixed(2));
           buyer.amount = 0;
           break;
@@ -68,14 +80,26 @@ export class OrderMap {
     }
 
     for (const seller of sortedSellers.filter((s) => s.amount !== 0)) {
-      this.addMatch(seller.amount, PUBLIC_GRID_USER_ID, seller.userId, PUBLIC_GRID_SELL_PRICE);
+      this.addMatch(
+        seller.amount,
+        PUBLIC_GRID_USER_ID,
+        seller.userId,
+        PUBLIC_GRID_SELL_PRICE,
+        seller.createdAt
+      );
     }
 
     return this.matches;
   }
 
-  private addMatch(amount: number, consumerId: number, prosumerId: number, price: number) {
-    this.matches.push({ amount, consumerId, prosumerId, price });
+  private addMatch(
+    amount: number,
+    consumerId: number,
+    prosumerId: number,
+    price: number,
+    createdAt: Date
+  ) {
+    this.matches.push({ amount, consumerId, prosumerId, price, createdAt });
   }
 
   private sortBuyers() {

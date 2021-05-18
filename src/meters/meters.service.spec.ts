@@ -51,17 +51,4 @@ describe("MetersService", () => {
   it("should be defined", () => {
     expect(metersService).toBeDefined();
   });
-
-  it("should update and find measurement of an user", async () => {
-    await metersService.addMeasureByUserId(15, { value: 10, timestamp: Date.now() * 1000 });
-    const measurement1 = await metersService.findMeasuresByUserId(15);
-
-    expect(measurement1).toHaveLength(1);
-
-    await metersService.addMeasureByUserId(5, { value: 5, timestamp: Date.now() * 1000 });
-    await metersService.addMeasureByUserId(5, { value: 5, timestamp: Date.now() * 1000 });
-    const measurement2 = await metersService.findMeasuresByUserId(5);
-
-    expect(measurement2).toHaveLength(2);
-  });
 });

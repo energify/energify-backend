@@ -3,4 +3,5 @@ export interface IMatch {
   prosumerId: number;
   amount: number;
   price: number;
+  createdAt: Date;
 }

@@ -15,6 +15,6 @@ export class MetersController {
 
   @Put("user")
   async addMeasureByAuthedUser(@Body() dto: AddMeasureDto, @AuthedUser() user: IAuthedUser) {
-    return this.metersService.addMeasureByUserId(user.id, dto);
+    return this.metersService.addMeasuresByUserId(user.id, dto);
   }
 }

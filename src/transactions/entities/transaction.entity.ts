@@ -4,7 +4,7 @@ import { User } from "src/users/entities/user.entity";
 import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, Index } from "typeorm";
 
 @Entity()
-export class Transaction extends Auditable {
+export class Transaction {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -25,6 +25,9 @@ export class Transaction extends Auditable {
   @Column("int", { nullable: true })
   @Index()
   paymentId: number;
+
+  @Column("datetime", { nullable: true })
+  createdAt: Date;
 
   @ManyToOne(() => User)
   consumer?: Promise<User> | undefined;

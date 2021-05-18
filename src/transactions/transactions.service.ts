@@ -9,7 +9,7 @@ import { Between, IsNull, Not, Repository } from "typeorm";
 import { CreateTransactionDto } from "./dto/create-transaction.dto";
 import { Transaction } from "./entities/transaction.entity";
 import { NoOverlap } from "src/shared/decorators/no-overlap.decorator";
-import { intervalToHours } from "src/shared/util";
+import { intervalToDateRanges, intervalToHours } from "src/shared/util";
 
 @Injectable()
 export class TransactionsService {
@@ -45,47 +45,93 @@ export class TransactionsService {
     });
   }
 
-  async findConsumedEnergyByUserId(userId: number) {
-    const { energyFromCommuniy } = await this.transactionsRepository
+  async findTotalEnergyByUserId(userId: number, start: Date, end: Date) {
+    const { consumption, production } = await this.transactionsRepository
       .createQueryBuilder("transactions")
+      .select("SUM(transactions.amount)", "consumption")
+      .where("transactions.prosumerId = :userId", { userId })
+      .andWhere("transactions.createdAt >= :start", { start })
+      .andWhere("transactions.createdAt <= :end", { end })
+      .addSelect("SUM(transactions.amount)", "production")
+      .where("transactions.consumerId = :userId", { userId })
+      .andWhere("transactions.createdAt >= :start", { start })
+      .andWhere("transactions.createdAt <= :end", { end })
+      .getRawOne();
+
+    return production - consumption;
+  }
+
+  async findConsumedEnergyByUserId(userId: number, start: Date, end: Date) {
+    const { energyFromCommunity } = await this.transactionsRepository
+      .createQueryBuilder("transactions")
+      .select("SUM(transactions.amount)", "energyFromCommunity")
       .where("transactions.consumerId = :userId", { userId })
       .andWhere("transactions.prosumerId IS NOT NULL")
-      .select("SUM(transactions.amount)", "totalEnergy")
+      .andWhere("transactions.createdAt >= :start", { start })
+      .andWhere("transactions.createdAt <= :end", { end })
       .getRawOne();
 
     const { energyFromPublicGrid } = await this.transactionsRepository
       .createQueryBuilder("transactions")
+      .select("SUM(transactions.amount)", "energyFromPublicGrid")
       .where("transactions.consumerId = :userId", { userId })
       .andWhere("transactions.prosumerId IS NULL")
-      .select("SUM(transactions.amount)", "totalEnergy")
+      .andWhere("transactions.createdAt >= :start", { start })
+      .andWhere("transactions.createdAt <= :end", { end })
       .getRawOne();
 
-    return { energyFromCommuniy, energyFromPublicGrid };
+    return {
+      energyFromCommunity: energyFromCommunity ?? 0,
+      energyFromPublicGrid: energyFromPublicGrid ?? 0,
+    };
   }
 
-  async findProducedEnergyByUserId(userId: number) {
+  async findProducedEnergyByUserId(userId: number, start: Date, end: Date) {
     const { energyToCommunity } = await this.transactionsRepository
       .createQueryBuilder("transactions")
-      .where("transactions.prosumerId = :userId", { userId })
-      .andWhere("transactiosn.consumerId IS NOT NULL")
       .select("SUM(transactions.amount)", "energyToCommunity")
+      .where("transactions.prosumerId = :userId", { userId })
+      .andWhere("transactions.consumerId IS NOT NULL")
+      .andWhere("transactions.createdAt >= :start", { start })
+      .andWhere("transactions.createdAt <= :end", { end })
       .getRawOne();
 
     const { energyToPublicGrid } = await this.transactionsRepository
       .createQueryBuilder("transactions")
-      .where("transactions.prosumerId = :userId", { userId })
-      .andWhere("transactiosn.consumerId IS NULL")
       .select("SUM(transactions.amount)", "energyToPublicGrid")
+      .where("transactions.prosumerId = :userId", { userId })
+      .andWhere("transactions.consumerId IS NULL")
+      .andWhere("transactions.createdAt >= :start", { start })
+      .andWhere("transactions.createdAt <= :end", { end })
       .getRawOne();
 
-    return { energyToCommunity, energyToPublicGrid };
+    return {
+      energyToCommunity: energyToCommunity ?? 0,
+      energyToPublicGrid: energyToPublicGrid ?? 0,
+    };
   }
 
-  async findStatsByUserId(userId: number) {
+  async findUserEnergyFlowByDateRange(userId: number, start: Date, end: Date) {
     return {
-      ...(await this.findConsumedEnergyByUserId(userId)),
-      ...(await this.findProducedEnergyByUserId(userId)),
+      ...(await this.findConsumedEnergyByUserId(userId, start, end)),
+      ...(await this.findProducedEnergyByUserId(userId, start, end)),
     };
+  }
+
+  async findUserEnergyByInterval(
+    userId: number,
+    interval: string,
+    scale: number,
+    start: Date = new Date()
+  ) {
+    const dateRanges = intervalToDateRanges(interval, scale, start);
+    const values = new Array<number>();
+
+    for (const { start, end } of dateRanges) {
+      values.push(await this.findTotalEnergyByUserId(userId, start, end));
+    }
+
+    return values;
   }
 
   async findLastNSeconds(lastNSeconds: number, includePublicGrid: boolean = false) {
@@ -104,47 +150,44 @@ export class TransactionsService {
     });
   }
 
-  async findPriceByDateRange(start: Date, end: Date) {
-    const { minPrice } = await this.transactionsRepository
+  async findAvgPriceByDateRange(start: Date, end: Date) {
+    const { price } = await this.transactionsRepository
       .createQueryBuilder("transactions")
+      .select("AVG(transactions.price)", "price")
       .where("transactions.createdAt > :start AND transactions.createdAt < :end", {
         start: formatDate(start, "yyyy-MM-dd HH:mm:ss"),
         end: formatDate(end, "yyyy-MM-dd HH:mm:ss"),
       })
-      .select("MIN(transactions.price)", "minPrice")
       .getRawOne();
 
-    return { price: parseFloat((minPrice ?? 0).toFixed(2)) };
+    return price ?? 0;
   }
 
-  async findPriceHistoryByInterval(interval: "1h" | "1d" | "1w" | "1m" | "1y", scale: number) {
-    let now = new Date();
-    let i = 0;
-    let average = new Array();
+  async findPriceHistoryByDateRange(start: Date, end: Date) {
+    const { price } = await this.transactionsRepository
+      .createQueryBuilder("transactions")
+      .select("AVG(transactions.price)", "price")
+      .where("transactions.createdAt >= :start", {
+        start: formatDate(start, "yyyy-MM-dd HH:mm:ss"),
+      })
+      .andWhere("transactions.createdAt <= :end", { end: formatDate(end, "yyyy-MM-dd HH:mm:ss") })
+      .getRawOne();
 
-    while (i < scale) {
-      const formatNow = formatDate(now, "yyyy-MM-dd HH:mm:ss");
-      let before = subHours(now, intervalToHours(interval));
-      const formatBefore = formatDate(before, "yyyy-MM-dd HH:mm:ss");
+    return price ?? 0;
+  }
 
-      const { value } = await this.transactionsRepository
-        .createQueryBuilder("transactions")
-        .where("transactions.createdAt >= :before AND transactions.createdAt <= :now", {
-          before: formatBefore,
-          now: formatNow,
-        })
-        .select("AVG(transactions.price)", "average")
-        .getRawOne();
-      now = before;
-      i++;
+  async findPriceHistoryByInterval(interval: string, scale: number, start: Date = new Date()) {
+    const dateRanges = intervalToDateRanges(interval, scale, start);
+    const values = new Array<number>();
 
-      average[i] = value;
+    for (const { start, end } of dateRanges) {
+      values.push(await this.findPriceHistoryByDateRange(start, end));
     }
 
-    return average;
+    return values;
   }
 
-  @Interval(10)
+  @Interval(5000)
   @NoOverlap()
   async match() {
     let index = 0;
@@ -154,8 +197,9 @@ export class TransactionsService {
       matches = await this.metersService.match(index);
 
       for (const match of matches) {
-        const { amount, consumerId, price, prosumerId } = match;
-        await this.create({ amount, consumerId, prosumerId, price });
+        const { amount, consumerId, price, prosumerId, createdAt } = match;
+
+        this.transactionsRepository.save({ amount, consumerId, prosumerId, price, createdAt });
       }
     } while (matches.length !== 0);
   }

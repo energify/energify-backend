@@ -1,9 +1,14 @@
-import { IsNumber } from "class-validator";
+import { IsDefined, IsNumber } from "class-validator";
 
-export class AddMeasureDto {
+class MeasureDto {
   @IsNumber()
   value: number;
 
   @IsNumber()
   timestamp: number;
+}
+
+export class AddMeasureDto {
+  @IsDefined()
+  measures: MeasureDto[];
 }
