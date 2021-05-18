@@ -4,6 +4,7 @@ export interface IAuthedUser {
   id: number;
   name: string;
   email: string;
+  hederaAccountId: string;
   birthdate: Date;
   role: Roles;
 }
