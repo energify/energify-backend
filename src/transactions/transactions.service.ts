@@ -198,7 +198,13 @@ export class TransactionsService {
 
       for (const match of matches) {
         const { amount, consumerId, price, prosumerId, createdAt } = match;
-        this.transactionsRepository.save({ amount, consumerId, prosumerId, price, createdAt });
+        await this.transactionsRepository.save({
+          amount,
+          consumerId,
+          prosumerId,
+          price,
+          createdAt,
+        });
       }
 
       index++;
