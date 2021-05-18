@@ -192,22 +192,21 @@ export class TransactionsService {
   async match() {
     let index = 0;
     let matches: IMatch[];
+    let transactions = new Array<Transaction>();
 
     do {
       matches = await this.metersService.match(index);
 
       for (const match of matches) {
         const { amount, consumerId, price, prosumerId, createdAt } = match;
-        await this.transactionsRepository.save({
-          amount,
-          consumerId,
-          prosumerId,
-          price,
-          createdAt,
-        });
+        transactions.push(
+          this.transactionsRepository.create({ amount, consumerId, prosumerId, price, createdAt })
+        );
       }
 
       index++;
     } while (matches.length !== 0);
+
+    await this.transactionsRepository.save(transactions);
   }
 }
