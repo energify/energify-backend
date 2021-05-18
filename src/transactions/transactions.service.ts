@@ -196,7 +196,8 @@ export class TransactionsService {
 
     do {
       matches = await this.metersService.match(index);
-
+      console.log(matches);
+      console.log(matches.length);
       for (const match of matches) {
         const { amount, consumerId, price, prosumerId, createdAt } = match;
         transactions.push(
@@ -205,7 +206,6 @@ export class TransactionsService {
       }
 
       index++;
-      console.log(transactions.length);
     } while (matches.length !== 0);
     transactions = [];
   }
