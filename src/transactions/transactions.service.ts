@@ -207,7 +207,6 @@ export class TransactionsService {
       index++;
       console.log(transactions.length);
     } while (matches.length !== 0);
-
-    await this.transactionsRepository.save(transactions);
+    transactions = [];
   }
 }
