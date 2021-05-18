@@ -70,6 +70,10 @@ export class MetersService {
     const prices = await this.usersSerivce.findAllPrices();
     const measurements = await this.findMeasuresByIndex(index);
 
+    if (measurements.length !== prices.length) {
+      return [];
+    }
+
     if (measurements.length !== 0) {
       await this.deleteMeasuresByIndex(index);
       return new OrderMap(prices, measurements).match();
