@@ -187,24 +187,22 @@ export class TransactionsService {
     return values;
   }
 
-  @Interval(1)
+  @Interval(200)
   @NoOverlap()
   async match() {
     let index = 0;
     let matches: IMatch[];
-    let transactions = new Array<number>();
+    let transactions = new Array<Transaction>();
 
     do {
-      //matches = await this.metersService.match(index);
+      matches = await this.metersService.match(index);
 
-      /*for (const match of matches) {
+      for (const match of matches) {
         const { amount, consumerId, price, prosumerId, createdAt } = match;
         transactions.push(
           this.transactionsRepository.create({ amount, consumerId, prosumerId, price, createdAt })
         );
-      }*/
-
-      transactions.push(1);
+      }
 
       index++;
       console.log(transactions.length);
